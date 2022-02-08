@@ -1,0 +1,10 @@
+#!/bin/sh
+
+set -eu
+
+execute-hook pre clean-build-directory
+
+test -f Makefile && make distclean
+rm -rf autom4te.cache/ build/ include/ modules/ config.h config.h.in config.nice configure configure.ac run-tests.php
+
+execute-hook post clean-build-directory

@@ -1,0 +1,206 @@
+#!/usr/bin/env python3
+
+import argparse
+import configparser
+import json
+import re
+import shlex
+import subprocess
+import os
+import sys
+import urllib.request
+
+STATE_FILENAME = ".build-php-extension.state.ini"
+CONFIGURED_FOR_IMAGE_OPTION = "configured_for_image"
+
+BASE_DIRECTORY = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+
+class PhpVersionInfo:
+    def __init__(self, minor_version, patch_version, filename):
+        self.minor_version = minor_version
+        self.patch_version = patch_version
+        self.filename = filename
+
+
+def ensure_is_minor_version(php_version):
+    if re.fullmatch("[0-9]+\\.[0-9]+", php_version):
+        return
+
+    raise RuntimeError("Illegal version number %s, the version should have the form <major>.<minor>" % php_version)
+
+
+def get_php_version_info(minor_version):
+    ensure_is_minor_version(minor_version)
+    response = urllib.request.urlopen("https://www.php.net/releases/index.php?json&version=%s" % minor_version)
+    data = json.load(response)
+    if "version" not in data or "source" not in data:
+        raise RuntimeError("Unknown PHP minor version %s" % minor_version)
+
+    patch_version = data["version"]
+    for source in data["source"]:
+        if "filename" not in source:
+            continue
+        filename = source["filename"]
+        if filename.endswith(".tar.xz"):
+            return PhpVersionInfo(minor_version, patch_version, filename)
+
+    raise RuntimeError("PHP version %s has no .tar.xz source available" % patch_version)
+
+
+def get_image_name(args):
+    ensure_is_minor_version(args.php_version)
+    return "".join([
+        "build-php-extension:",
+        args.php_version,
+        "-zts" if args.zts else "",
+        "-release" if args.release else "-debug",
+    ])
+
+
+def ensure_image_exists(args):
+    image_name = get_image_name(args)
+
+    if not subprocess.check_output(["docker", "images", "--quiet", image_name]):
+        build_container(args)
+
+
+def run_in_docker_container(args, command, environment=None):
+    image_name = get_image_name(args)
+
+    ensure_image_exists(args)
+
+    flags = [
+        "--rm",
+        "-v %s:%s" % (shlex.quote(os.getcwd()), shlex.quote("/src")),
+        "-w %s" % shlex.quote("/src")
+    ]
+    if sys.stdin.isatty():
+        flags.append("--interactive --tty")
+
+    for key, value in environment.items() if environment else {}:
+        flags.append("-e %s=%s" % (shlex.quote(key), shlex.quote(value)))
+
+    print("Executing command %s in docker container %s" % (command, image_name))
+    subprocess.check_call(
+        "docker run %s %s %s" % (" ".join(flags), shlex.quote(image_name), command),
+        shell=True)
+
+
+def build_container(args):
+    minor_version = args.php_version
+    version_info = get_php_version_info(minor_version)
+    image_name = get_image_name(args)
+
+    flags = [
+        "--tag %s" % shlex.quote(image_name),
+        "--build-arg PHP_TARBALL_NAME=%s" % shlex.quote(version_info.filename),
+    ]
+
+    additional_config_args = []
+
+    if args.zts:
+        if version_info.patch_version.startswith("7."):
+            additional_config_args.append("--enable-maintainer-zts")
+        else:
+            additional_config_args.append("--enable-zts")
+
+    if not args.release:
+        additional_config_args.append("--enable-debug")
+        flags.append("--build-arg EXTENSION_CFLAGS=%s" % shlex.quote("-O2 -ggdb"))
+
+    if additional_config_args:
+        flags.append("--build-arg ADDITIONAL_PHP_CONFIG_ARGS=%s" % shlex.quote(" ".join(additional_config_args)))
+
+    print("Building container for PHP %s (%s)…" % (minor_version, version_info.patch_version))
+    subprocess.check_call("docker build %s %s" % (" ".join(flags), shlex.quote(BASE_DIRECTORY)), shell=True)
+    print("Successfully built container %s" % image_name)
+
+
+def read_state_file():
+    config = configparser.ConfigParser()
+    config.read(STATE_FILENAME)
+    return config
+
+
+def write_state_file(config):
+    config.write(open(STATE_FILENAME, "w"))
+
+
+def set_configured_for_version(image_name):
+    config = read_state_file()
+    if image_name:
+        config.set(config.default_section, CONFIGURED_FOR_IMAGE_OPTION, image_name)
+    else:
+        config.remove_option(config.default_section, CONFIGURED_FOR_IMAGE_OPTION)
+    write_state_file(config)
+
+
+def configure(args):
+    set_configured_for_version(None)
+    run_in_docker_container(args, "configure-extension")
+    set_configured_for_version(get_image_name(args))
+
+
+def ensure_configured_for_current_version(args):
+    image_name = get_image_name(args)
+    config = read_state_file()
+    if config.get(config.default_section, CONFIGURED_FOR_IMAGE_OPTION, fallback=None) != image_name:
+        configure(args)
+
+
+def build(args):
+    ensure_configured_for_current_version(args)
+    run_in_docker_container(args, "build-extension")
+
+
+def test(args):
+    ensure_configured_for_current_version(args)
+    environment = {
+        "TEST_PHP_ARGS": "--show-diff",
+    }
+    if args.tests:
+        environment["TESTS"] = " ".join(map(shlex.quote, args.tests))
+    run_in_docker_container(args, "test-extension", environment)
+
+
+def clean(args):
+    set_configured_for_version(None)
+    run_in_docker_container(args, "clean-build-directory")
+
+
+def shell(args):
+    if not args.no_configure:
+        ensure_configured_for_current_version(args)
+    run_in_docker_container(args, "bash")
+
+
+argument_parser = argparse.ArgumentParser(description="Build and test PHP extensions")
+argument_parser.add_argument("--php-version", default="8.1", help="The PHP minor version")
+argument_parser.add_argument("--zts", action="store_true", help="Enable PHP thread safety")
+
+build_type_group = argument_parser.add_mutually_exclusive_group()
+build_type_group.add_argument("--debug", action="store_true", help="Enable PHP debug mode (default)")
+build_type_group.add_argument("--release", action="store_true", help="Enable PHP release mode")
+
+subparsers = argument_parser.add_subparsers(help="Which command to run", dest="command", required=True)
+
+build_container_parser = subparsers.add_parser("build-container", help="Build the docker container")
+configure_parser = subparsers.add_parser("configure", help="Configure the extension in the container")
+build_parser = subparsers.add_parser("build", help="Build the extension in the container")
+
+test_parser = subparsers.add_parser("test", help="Test the extension in the container")
+test_parser.add_argument("tests", help="The tests to execute", nargs="*")
+
+clean_parser = subparsers.add_parser("clean", help="Clean the build directory")
+
+shell_parser = subparsers.add_parser("shell", help="Open an interactive shell in the container")
+shell_parser.add_argument("--no-configure", action="store_true", help="Don't automatically configure the extension")
+
+arguments = argument_parser.parse_args()
+
+try:
+    locals()[arguments.command.replace("-", "_")](arguments)
+except BaseException as error:
+    print("Error: %s" % error)
+    exit(1)

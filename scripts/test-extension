@@ -1,0 +1,11 @@
+#!/bin/sh
+
+set -eu
+
+build-extension
+
+execute-hook pre test
+
+make test
+
+execute-hook post test

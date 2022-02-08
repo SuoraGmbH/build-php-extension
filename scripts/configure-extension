@@ -1,0 +1,20 @@
+#!/bin/sh
+
+set -eu
+
+clean-build-directory
+
+execute-hook pre configure
+
+phpize
+
+CONFIGURE_SCRIPT="./configure"
+if [ -x "build-hooks/configure" ]; then
+    CONFIGURE_SCRIPT="build-hooks/configure"
+fi
+
+"${CONFIGURE_SCRIPT}" CFLAGS="${CFLAGS:-} ${EXTENSION_CFLAGS:-}"
+
+execute-hook post configure
+
+build-extension
