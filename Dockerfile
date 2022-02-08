@@ -14,6 +14,8 @@ RUN apk add --no-cache \
     sqlite-dev \
     valgrind
 
+ENV PS1="\w \$ "
+
 COPY --from=composer:latest /usr/bin/composer /usr/local/bin/composer
 
 ARG PHP_TARBALL_NAME
