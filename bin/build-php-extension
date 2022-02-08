@@ -13,7 +13,7 @@ import urllib.request
 STATE_FILENAME = ".build-php-extension.state.ini"
 CONFIGURED_FOR_IMAGE_OPTION = "configured_for_image"
 
-BASE_DIRECTORY = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+BASE_DIRECTORY = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 
 
 class PhpVersionInfo:
