@@ -1,5 +1,7 @@
 FROM alpine:latest
 
+ARG INSTALL_ADDITIONAL_PACKAGES
+
 RUN apk add --no-cache \
     autoconf \
     bash \
@@ -12,7 +14,8 @@ RUN apk add --no-cache \
     oniguruma-dev \
     pkgconf \
     sqlite-dev \
-    valgrind
+    valgrind \
+    ${INSTALL_ADDITIONAL_PACKAGES}
 
 ENV PS1="\\w \\$ "
 
@@ -20,6 +23,9 @@ COPY --from=composer:latest /usr/bin/composer /usr/local/bin/composer
 
 ARG PHP_TARBALL_NAME
 ARG ADDITIONAL_PHP_CONFIG_ARGS
+ARG CC
+
+ENV CC="${CC:-cc}"
 
 RUN mkdir -p /opt/php-src && \
     wget "https://www.php.net/distributions/${PHP_TARBALL_NAME}" -O - | tar xJC /opt/php-src/ --strip-components 1 && \

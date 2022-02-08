@@ -54,6 +54,7 @@ def get_image_name(args):
         "build-php-extension:",
         args.php_version,
         "-zts" if args.zts else "",
+        "-clang" if args.clang else "",
         "-release" if args.release else "-debug",
     ])
 
@@ -108,6 +109,10 @@ def build_container(args):
     if not args.release:
         additional_config_args.append("--enable-debug")
         flags.append("--build-arg EXTENSION_CFLAGS=%s" % shlex.quote("-O2 -ggdb"))
+
+    if args.clang:
+        flags.append("--build-arg INSTALL_ADDITIONAL_PACKAGES=clang")
+        flags.append("--build-arg CC=clang")
 
     if additional_config_args:
         flags.append("--build-arg ADDITIONAL_PHP_CONFIG_ARGS=%s" % shlex.quote(" ".join(additional_config_args)))
@@ -182,6 +187,10 @@ argument_parser.add_argument("--zts", action="store_true", help="Enable PHP thre
 build_type_group = argument_parser.add_mutually_exclusive_group()
 build_type_group.add_argument("--debug", action="store_true", help="Enable PHP debug mode (default)")
 build_type_group.add_argument("--release", action="store_true", help="Enable PHP release mode")
+
+compiler_group = argument_parser.add_mutually_exclusive_group()
+compiler_group.add_argument("--gcc", action="store_true", help="Use GCC as a compiler (default)")
+compiler_group.add_argument("--clang", action="store_true", help="Use Clang as a compiler")
 
 subparsers = argument_parser.add_subparsers(help="Which command to run", dest="command", required=True)
 
