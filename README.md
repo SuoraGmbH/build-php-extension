@@ -16,33 +16,33 @@ The `build-php-extension` command has multiple subcommands.
 To configure and build your extension, run:
 
 ```shell
-$ build-php-extension configure
+build-php-extension configure
 ```
 
 To trigger a build, you can run:
 
 ```shell
-$ build-php-extension build
+build-php-extension build
 ```
 
 And to run the tests, you need to execute:
 
 ```shell
-$ build-php-extension test
+build-php-extension test
 ```
 
 You can specify the tests which should be executed as parameters to the test command. If you omit the list of tests, all
 tests are run.
 
 ```shell
-$ build-php-extension test tests/my_test_*.phpt
+build-php-extension test tests/my_test_*.phpt
 ```
 
 You can specify the minor PHP version which should be used, whether to enable thread-safety (`--zts`) and the build
 mode (`--release` or `--debug`) as arguments to all commands:
 
 ```shell
-$ build-php-extension --php-version 7.4 --release --zts build
+build-php-extension --php-version 7.4 --release --zts build
 ```
 
 The default is to disable thread safety and to build in debug mode.
@@ -50,13 +50,13 @@ The default is to disable thread safety and to build in debug mode.
 To open an interactive shell inside the Docker container, you can execute:
 
 ```shell
-$ build-php-extension shell
+build-php-extension shell
 ```
 
 The `clean` subcommand can be used to clean all generated files from the build directory:
 
 ```shell
-$ build-php-extension clean
+build-php-extension clean
 ```
 
 Status information is stored by the tool in the file `.build-php-extension.state.ini` inside the source code of your
@@ -69,7 +69,7 @@ automatically be built. When you call commands with the same configuration later
 reused. You can manually rebuild the Docker container with the following command:
 
 ```shell
-$ build-php-extension --php-version 8.0 --debug build-container
+build-php-extension --php-version 8.0 --debug build-container
 ```
 
 ## Customization
