@@ -31,18 +31,18 @@ RUN mkdir -p /opt/php-src && \
     wget "https://www.php.net/distributions/${PHP_TARBALL_NAME}" -O - | tar xJC /opt/php-src/ --strip-components 1 && \
     cd /opt/php-src && \
     ./configure \
-        --enable-fpm  \
-        --enable-mbstring  \
-        --enable-pdo  \
-        --enable-soap  \
+        --enable-fpm \
+        --enable-mbstring \
+        --enable-pdo \
+        --enable-soap \
         --with-bz2 \
-        --with-curl  \
-        --with-mysqli  \
-        --with-openssl  \
-        --with-pdo-mysql  \
-        --with-pdo-sqlite  \
+        --with-curl \
+        --with-mysqli \
+        --with-openssl \
+        --with-pdo-mysql \
+        --with-pdo-sqlite \
         --with-zlib \
-        --without-pear  \
+        --without-pear \
         ${ADDITIONAL_PHP_CONFIG_ARGS} && \
     make -j$(( $(getconf _NPROCESSORS_ONLN) + 1 )) && \
     make install
