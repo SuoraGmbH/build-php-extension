@@ -232,7 +232,8 @@ def sanitize_arguments(args):
         raise RuntimeError("Illegal version number %s, the version should have the form <major>.<minor>" % php_version)
 
     linux_distribution = get_linux_distribution(args)
-    if linux_distribution == LinuxDistribution.ALPINE and (args.address_sanitizer or args.undefined_sanitizer):
+    use_sanitizer = args.address_sanitizer or args.undefined_sanitizer
+    if linux_distribution == LinuxDistribution.ALPINE and use_sanitizer:
         raise RuntimeError("Sanitizers are currently not supported on Alpine since they don't support MUSL")
 
 
