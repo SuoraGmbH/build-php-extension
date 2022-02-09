@@ -74,17 +74,17 @@ build-php-extension --php-version 8.0 --debug build-container
 
 ## Customization
 
-You can customize the behavior of the build using various hooks. These are scripts that are executed at the respective
-steps of the build process. The scripts need to be executable to be executed. These are the available extension points:
+You can customize the behavior of the build using various hooks. These are scripts that are sourced at the respective
+steps of the build process. These are the available extension points:
 
-- `build-hooks/pre-configure`
-- `build-hooks/post-configure`
-- `build-hooks/pre-build`
-- `build-hooks/post-build`
-- `build-hooks/pre-test`
-- `build-hooks/post-test`
-- `build-hooks/pre-clean-build-directory`
-- `build-hooks/post-clean-build-directory`
+- `build-hooks/pre-configure.sh`
+- `build-hooks/post-configure.sh`
+- `build-hooks/pre-build.sh`
+- `build-hooks/post-build.sh`
+- `build-hooks/pre-test.sh`
+- `build-hooks/post-test.sh`
+- `build-hooks/pre-clean-build-directory.sh`
+- `build-hooks/post-clean-build-directory.sh`
 
 If the file `build-hooks/configure` exists and is executable, it is executed instead of calling `./configure` directly.
 This can be used to pass additional flags to `./configure`. All command-line-arguments that script receives, should be

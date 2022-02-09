@@ -2,10 +2,12 @@
 
 set -eu
 
+. helpers.sh
+
 build-extension
 
-execute-hook pre test
+source_hook pre test
 
 make test
 
-execute-hook post test
+source_hook post test

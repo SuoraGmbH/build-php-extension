@@ -2,8 +2,10 @@
 
 set -eu
 
-execute-hook pre build
+. helpers.sh
+
+source_hook pre build
 
 make -j$(( $(getconf _NPROCESSORS_ONLN) + 1 ))
 
-execute-hook post build
+source_hook post build

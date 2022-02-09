@@ -2,9 +2,11 @@
 
 set -eu
 
+. helpers.sh
+
 clean-build-directory
 
-execute-hook pre configure
+source_hook pre configure
 
 phpize
 
@@ -15,6 +17,6 @@ fi
 
 "${CONFIGURE_SCRIPT}" CFLAGS="${CFLAGS:-} ${EXTENSION_CFLAGS:-}" CXXFLAGS="${CXXFLAGS:-} ${EXTENSION_CFLAGS:-}"
 
-execute-hook post configure
+source_hook post configure
 
 build-extension
