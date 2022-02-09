@@ -204,7 +204,10 @@ def ensure_configured_for_current_version(args):
 
 def build(args):
     ensure_configured_for_current_version(args)
-    run_in_docker_container(args, "build-extension")
+    command = "build-extension"
+    if args.clean:
+        command += " --clean"
+    run_in_docker_container(args, command)
 
 
 def test(args):
@@ -260,7 +263,9 @@ subparsers = argument_parser.add_subparsers(help="Which command to run", dest="c
 
 build_image_parser = subparsers.add_parser("build-image", help="Build the docker image")
 configure_parser = subparsers.add_parser("configure", help="Configure the extension in a container")
+
 build_parser = subparsers.add_parser("build", help="Build the extension in a container")
+build_parser.add_argument("--clean", action="store_true", help="Run make clean before the build")
 
 test_parser = subparsers.add_parser("test", help="Test the extension in a container")
 test_parser.add_argument("tests", help="The tests to execute", nargs="*")

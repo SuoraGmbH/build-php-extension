@@ -6,6 +6,10 @@ set -eu
 
 source_hook pre build
 
+if [ "${#}" -ge 1 ] && [ "${1}" = '--clean' ]; then
+    make clean
+fi
+
 make -j$(( $(getconf _NPROCESSORS_ONLN) + 1 ))
 
 source_hook post build
