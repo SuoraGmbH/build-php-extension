@@ -8,6 +8,7 @@ RUN apt-get update &&  \
         libbz2-dev \
         libcurl4-openssl-dev \
         libonig-dev \
+        libpcre2-dev \
         libsqlite3-dev \
         libssl-dev \
         libxml2-dev \
@@ -43,6 +44,7 @@ RUN mkdir -p /opt/php-src && \
         --enable-soap \
         --with-bz2 \
         --with-curl \
+        --with-external-pcre \
         --with-mysqli \
         --with-openssl \
         --with-pdo-mysql \

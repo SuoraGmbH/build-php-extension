@@ -13,6 +13,7 @@ RUN apk add --no-cache \
     libzip-dev \
     linux-headers \
     oniguruma-dev \
+    pcre2-dev \
     pkgconf \
     sqlite-dev \
     valgrind
@@ -43,6 +44,7 @@ RUN mkdir -p /opt/php-src && \
         --enable-soap \
         --with-bz2 \
         --with-curl \
+        --with-external-pcre \
         --with-mysqli \
         --with-openssl \
         --with-pdo-mysql \
