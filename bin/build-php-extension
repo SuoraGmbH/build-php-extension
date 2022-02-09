@@ -9,6 +9,7 @@ import subprocess
 import os
 import sys
 import urllib.request
+from distutils.version import LooseVersion
 from enum import Enum
 
 STATE_FILENAME = ".build-php-extension.state.ini"
@@ -24,15 +25,7 @@ class PhpVersionInfo:
         self.filename = filename
 
 
-def ensure_is_minor_version(php_version):
-    if re.fullmatch("[0-9]+\\.[0-9]+", php_version):
-        return
-
-    raise RuntimeError("Illegal version number %s, the version should have the form <major>.<minor>" % php_version)
-
-
 def get_php_version_info(minor_version):
-    ensure_is_minor_version(minor_version)
     response = urllib.request.urlopen("https://www.php.net/releases/index.php?json&version=%s" % minor_version)
     data = json.load(response)
     if "version" not in data or "source" not in data:
@@ -68,7 +61,7 @@ def get_image_name(args):
         "-%s" % linux_distribution.value,
         "-clang" if args.clang else "",
         "-zts" if args.zts else "",
-        "-msan" if args.memory_sanitizer else "",
+        "-asan" if args.address_sanitizer else "",
         "-ubsan" if args.undefined_sanitizer else "",
         "-release" if args.release else "-debug",
     ])
@@ -116,6 +109,9 @@ def build_container(args):
     ]
 
     additional_config_args = []
+    extension_cflags = []
+    php_cflags = []
+    php_test_args = []
 
     if args.zts:
         if version_info.patch_version.startswith("7."):
@@ -125,14 +121,41 @@ def build_container(args):
 
     if not args.release:
         additional_config_args.append("--enable-debug")
-        flags.append("--build-arg EXTENSION_CFLAGS=%s" % shlex.quote("-O2 -ggdb"))
+        extension_cflags.append("-O2")
+        extension_cflags.append("-ggdb")
 
     if args.clang:
         flags.append("--build-arg INSTALL_ADDITIONAL_PACKAGES=clang")
         flags.append("--build-arg CC=clang")
 
-    if additional_config_args:
-        flags.append("--build-arg ADDITIONAL_PHP_CONFIG_ARGS=%s" % shlex.quote(" ".join(additional_config_args)))
+    if args.address_sanitizer:
+        cflags = ["-fsanitize=address"]
+        extension_cflags.extend(cflags)
+        if LooseVersion(version_info.patch_version) >= LooseVersion("8.0"):
+            additional_config_args.append("--enable-address-sanitizer")
+        else:
+            php_cflags.extend(cflags)
+            php_cflags.append("-DZEND_TRACK_ARENA_ALLOC")
+        if LooseVersion(version_info.patch_version) >= LooseVersion("7.4"):
+            php_test_args.append("--asan")
+
+    if args.undefined_sanitizer:
+        cflags = ["-fsanitize=undefined", "-fno-sanitize-recover=undefined", "-fno-sanitize=object-size"]
+        extension_cflags.extend(cflags)
+        if LooseVersion(version_info.patch_version) >= LooseVersion("8.1"):
+            additional_config_args.append("--enable-undefined-sanitizer")
+        else:
+            php_cflags.extend(cflags)
+
+    build_args = {
+        "ADDITIONAL_PHP_CONFIG_ARGS": additional_config_args,
+        "EXTENSION_CFLAGS": extension_cflags,
+        "PHP_CFLAGS": php_cflags,
+        "ADDITIONAL_PHP_TEST_ARGS": php_test_args,
+    }
+    for key, values in build_args.items():
+        if values:
+            flags.append("--build-arg %s=%s" % (key, shlex.quote(" ".join(values))))
 
     print("Building container for PHP %s (%s)…" % (minor_version, version_info.patch_version))
     command = "docker build %s %s" % (" ".join(flags), shlex.quote(BASE_DIRECTORY))
@@ -197,6 +220,16 @@ def shell(args):
     run_in_docker_container(args, "bash")
 
 
+def sanitize_arguments(args):
+    php_version = args.php_version
+    if not re.fullmatch("[0-9]+\\.[0-9]+", php_version):
+        raise RuntimeError("Illegal version number %s, the version should have the form <major>.<minor>" % php_version)
+
+    linux_distribution = get_linux_distribution(args)
+    if linux_distribution == LinuxDistribution.ALPINE and (args.address_sanitizer or args.undefined_sanitizer):
+        raise RuntimeError("Sanitizers are currently not supported on Alpine since they don't support MUSL")
+
+
 argument_parser = argparse.ArgumentParser(description="Build and test PHP extensions")
 argument_parser.add_argument("--php-version", default="8.1", help="The PHP minor version")
 argument_parser.add_argument("--zts", action="store_true", help="Enable PHP thread safety")
@@ -212,6 +245,9 @@ distribution_group.add_argument("--ubuntu", action="store_true", help="Use the U
 compiler_group = argument_parser.add_mutually_exclusive_group()
 compiler_group.add_argument("--gcc", action="store_true", help="Use GCC as a compiler (default)")
 compiler_group.add_argument("--clang", action="store_true", help="Use Clang as a compiler")
+
+argument_parser.add_argument("--address-sanitizer", action="store_true", help="Enable address sanitizer")
+argument_parser.add_argument("--undefined-sanitizer", action="store_true", help="Enable undefined sanitizer")
 
 subparsers = argument_parser.add_subparsers(help="Which command to run", dest="command", required=True)
 
@@ -230,6 +266,7 @@ shell_parser.add_argument("--no-configure", action="store_true", help="Don't aut
 arguments = argument_parser.parse_args()
 
 try:
+    sanitize_arguments(arguments)
     locals()[arguments.command.replace("-", "_")](arguments)
 except BaseException as error:
     print("Error: %s" % error)

@@ -30,6 +30,7 @@ RUN apk add --no-cache ${INSTALL_ADDITIONAL_PACKAGES}
 
 ARG PHP_TARBALL_NAME
 ARG ADDITIONAL_PHP_CONFIG_ARGS
+ARG PHP_CFLAGS
 ARG CC
 
 ENV CC="${CC:-cc}"
@@ -38,6 +39,8 @@ RUN mkdir -p /opt/php-src && \
     wget "https://www.php.net/distributions/${PHP_TARBALL_NAME}" -O - | tar xJC /opt/php-src/ --strip-components 1 && \
     cd /opt/php-src && \
     ./configure \
+        CFLAGS="${CFLAGS} ${PHP_CFLAGS}" \
+        CXXFLAGS="${CXXFLAGS} ${PHP_CFLAGS}" \
         --enable-fpm \
         --enable-mbstring \
         --enable-pdo \
@@ -57,9 +60,10 @@ RUN mkdir -p /opt/php-src && \
     make install
 
 ARG EXTENSION_CFLAGS
+ARG ADDITIONAL_PHP_TEST_ARGS
 
 ENV EXTENSION_CFLAGS="${EXTENSION_CFLAGS}"
 ENV NO_INTERACTION=1
-ENV TEST_PHP_ARGS="--show-diff"
+ENV TEST_PHP_ARGS="--show-diff ${ADDITIONAL_PHP_TEST_ARGS}"
 
 CMD /bin/bash
