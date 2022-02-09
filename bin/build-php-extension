@@ -75,6 +75,9 @@ def ensure_image_exists(args):
 
 
 def run_in_docker_container(args, command, environment=None):
+    if not environment:
+        environment = {}
+
     image_name = get_image_name(args)
 
     ensure_image_exists(args)
@@ -87,7 +90,10 @@ def run_in_docker_container(args, command, environment=None):
     if sys.stdin.isatty():
         flags.append("--interactive --tty")
 
-    for key, value in environment.items() if environment else {}:
+    if args.address_sanitizer:
+        environment["ZEND_DONT_UNLOAD_MODULES"] = "1"
+
+    for key, value in environment.items():
         flags.append("-e %s=%s" % (shlex.quote(key), shlex.quote(value)))
 
     print("Executing command %s in docker container %s" % (command, image_name))
