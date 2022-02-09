@@ -180,9 +180,7 @@ def build(args):
 
 def test(args):
     ensure_configured_for_current_version(args)
-    environment = {
-        "TEST_PHP_ARGS": "--show-diff",
-    }
+    environment = {}
     if args.tests:
         environment["TESTS"] = " ".join(map(shlex.quote, args.tests))
     run_in_docker_container(args, "test-extension", environment)
