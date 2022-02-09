@@ -10,6 +10,7 @@ RUN apk add --no-cache \
     curl-dev \
     gdb \
     libxml2-dev \
+    libzip-dev \
     linux-headers \
     oniguruma-dev \
     pkgconf \
@@ -41,6 +42,7 @@ RUN mkdir -p /opt/php-src && \
         --with-openssl \
         --with-pdo-mysql \
         --with-pdo-sqlite \
+        --with-zip \
         --with-zlib \
         --without-pear \
         ${ADDITIONAL_PHP_CONFIG_ARGS} && \

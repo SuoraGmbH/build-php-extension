@@ -13,6 +13,7 @@ RUN apt-get update &&  \
         libsqlite3-dev \
         libssl-dev \
         libxml2-dev \
+        libzip-dev \
         pkg-config \
         unzip \
         valgrind \
@@ -42,6 +43,7 @@ RUN mkdir -p /opt/php-src && \
         --with-openssl \
         --with-pdo-mysql \
         --with-pdo-sqlite \
+        --with-zip \
         --with-zlib \
         --without-pear \
         ${ADDITIONAL_PHP_CONFIG_ARGS} && \
