@@ -71,7 +71,7 @@ def ensure_image_exists(args):
     image_name = get_image_name(args)
 
     if not subprocess.check_output(["docker", "images", "--quiet", image_name]):
-        build_container(args)
+        build_image(args)
 
 
 def run_in_docker_container(args, command, environment=None):
@@ -102,7 +102,7 @@ def run_in_docker_container(args, command, environment=None):
         shell=True)
 
 
-def build_container(args):
+def build_image(args):
     minor_version = args.php_version
     version_info = get_php_version_info(minor_version)
     image_name = get_image_name(args)
@@ -163,11 +163,11 @@ def build_container(args):
         if values:
             flags.append("--build-arg %s=%s" % (key, shlex.quote(" ".join(values))))
 
-    print("Building container for PHP %s (%s)…" % (minor_version, version_info.patch_version))
+    print("Building image for PHP %s (%s)…" % (minor_version, version_info.patch_version))
     command = "docker build %s %s" % (" ".join(flags), shlex.quote(BASE_DIRECTORY))
     print("Executing build command: %s" % command)
     subprocess.check_call(command, shell=True)
-    print("Successfully built container %s" % image_name)
+    print("Successfully built image %s" % image_name)
 
 
 def read_state_file():
@@ -215,7 +215,7 @@ def test(args):
     run_in_docker_container(args, "test-extension", environment)
 
 
-def clean(args):
+def dist_clean(args):
     set_configured_for_version(None)
     run_in_docker_container(args, "clean-build-directory")
 
@@ -258,16 +258,16 @@ argument_parser.add_argument("--undefined-sanitizer", action="store_true", help=
 
 subparsers = argument_parser.add_subparsers(help="Which command to run", dest="command", required=True)
 
-build_container_parser = subparsers.add_parser("build-container", help="Build the docker container")
-configure_parser = subparsers.add_parser("configure", help="Configure the extension in the container")
-build_parser = subparsers.add_parser("build", help="Build the extension in the container")
+build_image_parser = subparsers.add_parser("build-image", help="Build the docker image")
+configure_parser = subparsers.add_parser("configure", help="Configure the extension in a container")
+build_parser = subparsers.add_parser("build", help="Build the extension in a container")
 
-test_parser = subparsers.add_parser("test", help="Test the extension in the container")
+test_parser = subparsers.add_parser("test", help="Test the extension in a container")
 test_parser.add_argument("tests", help="The tests to execute", nargs="*")
 
-clean_parser = subparsers.add_parser("clean", help="Clean the build directory")
+dist_clean_parser = subparsers.add_parser("dist-clean", help="Clean the build directory")
 
-shell_parser = subparsers.add_parser("shell", help="Open an interactive shell in the container")
+shell_parser = subparsers.add_parser("shell", help="Open an interactive shell in a container")
 shell_parser.add_argument("--no-configure", action="store_true", help="Don't automatically configure the extension")
 
 arguments = argument_parser.parse_args()

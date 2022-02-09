@@ -47,29 +47,29 @@ build-php-extension --php-version 7.4 --release --zts build
 
 The default is to disable thread safety and to build in debug mode.
 
-To open an interactive shell inside the Docker container, you can execute:
+To open an interactive shell inside a Docker container, you can execute:
 
 ```shell
 build-php-extension shell
 ```
 
-The `clean` subcommand can be used to clean all generated files from the build directory:
+The `dist-clean` subcommand can be used to clean all generated files from the build directory:
 
 ```shell
-build-php-extension clean
+build-php-extension dist-clean
 ```
 
 Status information is stored by the tool in the file `.build-php-extension.state.ini` inside the source code of your
 extension. You should add this file to your `.gitignore`.
 
-## Rebuild Docker Container
+## Rebuild Docker Image
 
-When you first execute a command in one specific configuration, the Docker container for that configuration will
-automatically be built. When you call commands with the same configuration later on, that Docker container will be
-reused. You can manually rebuild the Docker container with the following command:
+When you first execute a command in one specific configuration, the Docker image for that configuration will
+automatically be built. When you call commands with the same configuration later on, that Docker image will be reused.
+You can manually rebuild the Docker image with the following command:
 
 ```shell
-build-php-extension --php-version 8.0 --debug build-container
+build-php-extension --php-version 8.0 --debug build-image
 ```
 
 ## Customization
