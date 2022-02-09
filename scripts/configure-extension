@@ -13,7 +13,7 @@ if [ -x "build-hooks/configure" ]; then
     CONFIGURE_SCRIPT="build-hooks/configure"
 fi
 
-"${CONFIGURE_SCRIPT}" CFLAGS="${CFLAGS:-} ${EXTENSION_CFLAGS:-}"
+"${CONFIGURE_SCRIPT}" CFLAGS="${CFLAGS:-} ${EXTENSION_CFLAGS:-}" CXXFLAGS="${CXXFLAGS:-} ${EXTENSION_CFLAGS:-}"
 
 execute-hook post configure
 
