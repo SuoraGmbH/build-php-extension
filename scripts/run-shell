@@ -1,0 +1,9 @@
+#!/bin/sh
+
+set -eu
+
+. helpers.sh
+
+source_hook pre shell
+
+exec bash

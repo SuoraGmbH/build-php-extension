@@ -226,7 +226,7 @@ def dist_clean(args):
 def shell(args):
     if not args.no_configure:
         ensure_configured_for_current_version(args)
-    run_in_docker_container(args, "bash")
+    run_in_docker_container(args, "run-shell")
 
 
 def sanitize_arguments(args):

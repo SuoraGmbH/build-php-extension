@@ -85,6 +85,7 @@ steps of the build process. These are the available extension points:
 - `build-hooks/post-test.sh`
 - `build-hooks/pre-clean-build-directory.sh`
 - `build-hooks/post-clean-build-directory.sh`
+- `build-hooks/pre-shell.sh`
 
 If the file `build-hooks/configure` exists and is executable, it is executed instead of calling `./configure` directly.
 This can be used to pass additional flags to `./configure`. All command-line-arguments that script receives, should be
