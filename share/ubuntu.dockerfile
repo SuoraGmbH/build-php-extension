@@ -16,6 +16,7 @@ RUN apt-get update &&  \
         pkg-config \
         unzip \
         valgrind \
+        vim-tiny \
         wget \
         zlib1g-dev
 
