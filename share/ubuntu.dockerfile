@@ -1,7 +1,5 @@
 FROM ubuntu:latest
 
-ARG INSTALL_ADDITIONAL_PACKAGES
-
 RUN apt-get update &&  \
     DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get install -y \
         autoconf \
@@ -18,10 +16,16 @@ RUN apt-get update &&  \
         unzip \
         valgrind \
         wget \
-        zlib1g-dev \
-        ${INSTALL_ADDITIONAL_PACKAGES}
+        zlib1g-dev
 
 COPY --from=composer:latest /usr/bin/composer /usr/local/bin/composer
+
+COPY scripts/ /usr/local/bin/
+
+ARG INSTALL_ADDITIONAL_PACKAGES
+
+RUN apt-get update &&  \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y ${INSTALL_ADDITIONAL_PACKAGES}
 
 ARG PHP_TARBALL_NAME
 ARG ADDITIONAL_PHP_CONFIG_ARGS
@@ -49,8 +53,6 @@ RUN mkdir -p /opt/php-src && \
         ${ADDITIONAL_PHP_CONFIG_ARGS} && \
     make -j$(( $(getconf _NPROCESSORS_ONLN) + 1 )) && \
     make install
-
-COPY scripts/ /usr/local/bin/
 
 ARG EXTENSION_CFLAGS
 

@@ -15,12 +15,17 @@ RUN apk add --no-cache \
     oniguruma-dev \
     pkgconf \
     sqlite-dev \
-    valgrind \
-    ${INSTALL_ADDITIONAL_PACKAGES}
+    valgrind
 
 ENV PS1="\\w \\$ "
 
 COPY --from=composer:latest /usr/bin/composer /usr/local/bin/composer
+
+COPY scripts/ /usr/local/bin/
+
+ARG INSTALL_ADDITIONAL_PACKAGES
+
+RUN apk add --no-cache ${INSTALL_ADDITIONAL_PACKAGES}
 
 ARG PHP_TARBALL_NAME
 ARG ADDITIONAL_PHP_CONFIG_ARGS
@@ -48,8 +53,6 @@ RUN mkdir -p /opt/php-src && \
         ${ADDITIONAL_PHP_CONFIG_ARGS} && \
     make -j$(( $(getconf _NPROCESSORS_ONLN) + 1 )) && \
     make install
-
-COPY scripts/ /usr/local/bin/
 
 ARG EXTENSION_CFLAGS
 
