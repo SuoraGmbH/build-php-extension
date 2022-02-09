@@ -9,6 +9,7 @@ import subprocess
 import os
 import sys
 import urllib.request
+from enum import Enum
 
 STATE_FILENAME = ".build-php-extension.state.ini"
 CONFIGURED_FOR_IMAGE_OPTION = "configured_for_image"
@@ -48,13 +49,27 @@ def get_php_version_info(minor_version):
     raise RuntimeError("PHP version %s has no .tar.xz source available" % patch_version)
 
 
+class LinuxDistribution(Enum):
+    ALPINE = "alpine"
+    UBUNTU = "ubuntu"
+
+
+def get_linux_distribution(args):
+    if args.ubuntu:
+        return LinuxDistribution.UBUNTU
+    return LinuxDistribution.ALPINE
+
+
 def get_image_name(args):
-    ensure_is_minor_version(args.php_version)
+    linux_distribution = get_linux_distribution(args)
     return "".join([
         "build-php-extension:",
         args.php_version,
-        "-zts" if args.zts else "",
+        "-%s" % linux_distribution.value,
         "-clang" if args.clang else "",
+        "-zts" if args.zts else "",
+        "-msan" if args.memory_sanitizer else "",
+        "-ubsan" if args.undefined_sanitizer else "",
         "-release" if args.release else "-debug",
     ])
 
@@ -92,8 +107,10 @@ def build_container(args):
     minor_version = args.php_version
     version_info = get_php_version_info(minor_version)
     image_name = get_image_name(args)
+    linux_distribution = get_linux_distribution(args)
 
     flags = [
+        "--file %s" % shlex.quote("%s/share/%s.dockerfile" % (BASE_DIRECTORY, linux_distribution.value)),
         "--tag %s" % shlex.quote(image_name),
         "--build-arg PHP_TARBALL_NAME=%s" % shlex.quote(version_info.filename),
     ]
@@ -189,6 +206,10 @@ argument_parser.add_argument("--zts", action="store_true", help="Enable PHP thre
 build_type_group = argument_parser.add_mutually_exclusive_group()
 build_type_group.add_argument("--debug", action="store_true", help="Enable PHP debug mode (default)")
 build_type_group.add_argument("--release", action="store_true", help="Enable PHP release mode")
+
+distribution_group = argument_parser.add_mutually_exclusive_group()
+distribution_group.add_argument("--alpine", action="store_true", help="Use the Alpine Linux distribution (default)")
+distribution_group.add_argument("--ubuntu", action="store_true", help="Use the Ubuntu Linux distribution")
 
 compiler_group = argument_parser.add_mutually_exclusive_group()
 compiler_group.add_argument("--gcc", action="store_true", help="Use GCC as a compiler (default)")
