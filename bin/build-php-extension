@@ -118,7 +118,9 @@ def build_container(args):
         flags.append("--build-arg ADDITIONAL_PHP_CONFIG_ARGS=%s" % shlex.quote(" ".join(additional_config_args)))
 
     print("Building container for PHP %s (%s)…" % (minor_version, version_info.patch_version))
-    subprocess.check_call("docker build %s %s" % (" ".join(flags), shlex.quote(BASE_DIRECTORY)), shell=True)
+    command = "docker build %s %s" % (" ".join(flags), shlex.quote(BASE_DIRECTORY))
+    print("Executing build command: %s" % command)
+    subprocess.check_call(command, shell=True)
     print("Successfully built container %s" % image_name)
 
 
