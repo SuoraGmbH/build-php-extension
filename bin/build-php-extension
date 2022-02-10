@@ -127,8 +127,6 @@ def build_image(args):
 
     if not args.release:
         additional_config_args.append("--enable-debug")
-        extension_cflags.append("-O2")
-        extension_cflags.append("-ggdb")
 
     if args.clang:
         flags.append("--build-arg INSTALL_ADDITIONAL_PACKAGES=clang")
