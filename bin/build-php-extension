@@ -25,7 +25,25 @@ class PhpVersionInfo:
         self.filename = filename
 
 
-def get_php_version_info(minor_version):
+def get_php_version_info(args):
+    if args.php_git_branch:
+        with urllib.request.urlopen("https://raw.githubusercontent.com/php/php-src/%s/main/php_version.h" % args.php_git_branch) as response:
+            for line in response:
+                match = re.search(r"^#define PHP_VERSION_ID (\d+)$", line.decode("utf-8"))
+                if match:
+                    version_id = int(match.group(1))
+                    patch = version_id % 100
+                    minor = int(version_id / 100) % 100
+                    major = int(version_id / 10000)
+
+                    return PhpVersionInfo(
+                        "%s.%s" % (major, minor),
+                        "%s.%s.%s" % (major, minor, patch),
+                        None
+                    )
+        raise RuntimeError("Error parsing PHP version in branch %s" % args.php_git_branch)
+
+    minor_version = args.php_version
     response = urllib.request.urlopen("https://www.php.net/releases/index.php?json&version=%s" % minor_version)
     data = json.load(response)
     if "version" not in data or "source" not in data:
@@ -57,7 +75,7 @@ def get_image_name(args):
     linux_distribution = get_linux_distribution(args)
     return "".join([
         "build-php-extension:",
-        args.php_version,
+        "git-%s" % args.php_git_branch if args.php_git_branch else args.php_version,
         "-%s" % linux_distribution.value,
         "-clang" if args.clang else "",
         "-zts" if args.zts else "",
@@ -103,21 +121,26 @@ def run_in_docker_container(args, command, environment=None):
 
 
 def build_image(args):
-    minor_version = args.php_version
-    version_info = get_php_version_info(minor_version)
+    version_info = get_php_version_info(args)
     image_name = get_image_name(args)
     linux_distribution = get_linux_distribution(args)
 
     flags = [
         "--file %s" % shlex.quote("%s/share/%s.dockerfile" % (BASE_DIRECTORY, linux_distribution.value)),
         "--tag %s" % shlex.quote(image_name),
-        "--build-arg PHP_TARBALL_NAME=%s" % shlex.quote(version_info.filename),
     ]
 
     additional_config_args = []
     extension_cflags = []
     php_cflags = []
     php_test_args = []
+    install_additional_packages = []
+
+    if args.php_git_branch:
+        install_additional_packages.append("git")
+        flags.append("--build-arg PHP_GIT_BRANCH=%s" % shlex.quote(args.php_git_branch))
+    else:
+        flags.append("--build-arg PHP_TARBALL_NAME=%s" % shlex.quote(version_info.filename))
 
     if args.zts:
         if version_info.patch_version.startswith("7."):
@@ -129,7 +152,7 @@ def build_image(args):
         additional_config_args.append("--enable-debug")
 
     if args.clang:
-        flags.append("--build-arg INSTALL_ADDITIONAL_PACKAGES=clang")
+        install_additional_packages.append("clang")
         flags.append("--build-arg CC=clang")
 
     if args.address_sanitizer:
@@ -156,12 +179,17 @@ def build_image(args):
         "EXTENSION_CFLAGS": extension_cflags,
         "PHP_CFLAGS": php_cflags,
         "ADDITIONAL_PHP_TEST_ARGS": php_test_args,
+        "INSTALL_ADDITIONAL_PACKAGES": install_additional_packages
     }
     for key, values in build_args.items():
         if values:
             flags.append("--build-arg %s=%s" % (key, shlex.quote(" ".join(values))))
 
-    print("Building image for PHP %s (%s)…" % (minor_version, version_info.patch_version))
+    print("Building image for PHP %s (%s%s)…" % (
+        version_info.minor_version,
+        "git branch %s, " % args.php_git_branch if args.php_git_branch else "",
+        version_info.patch_version
+    ))
     command = "docker build %s %s" % (" ".join(flags), shlex.quote(BASE_DIRECTORY))
     print("Executing build command: %s" % command)
     subprocess.check_call(command, shell=True)
@@ -239,8 +267,11 @@ def sanitize_arguments(args):
 
 
 argument_parser = argparse.ArgumentParser(description="Build and test PHP extensions")
-argument_parser.add_argument("--php-version", default="8.1", help="The PHP minor version")
 argument_parser.add_argument("--zts", action="store_true", help="Enable PHP thread safety")
+
+php_version = argument_parser.add_mutually_exclusive_group()
+php_version.add_argument("--php-version", default="8.1", help="The PHP minor version")
+php_version.add_argument("--php-git-branch", help="A git tag or branch name from the main PHP repository")
 
 build_type_group = argument_parser.add_mutually_exclusive_group()
 build_type_group.add_argument("--debug", action="store_true", help="Enable PHP debug mode (default)")
