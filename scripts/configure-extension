@@ -18,5 +18,3 @@ fi
 "${CONFIGURE_SCRIPT}" CFLAGS="${CFLAGS:-} ${EXTENSION_CFLAGS:-}" CXXFLAGS="${CXXFLAGS:-} ${EXTENSION_CFLAGS:-}"
 
 source_hook post configure
-
-build-extension
