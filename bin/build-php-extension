@@ -143,6 +143,10 @@ def build_image(args):
     else:
         flags.append("--build-arg PHP_TARBALL_NAME=%s" % shlex.quote(version_info.filename))
 
+    if LooseVersion(version_info.patch_version) < LooseVersion("7.2.5"):
+        # Composer 2.3.0 dropped support for PHP <7.2.5
+        flags.append("--build-arg COMPOSER_TAG_NAME=2.2")
+
     if args.zts:
         if version_info.patch_version.startswith("7."):
             additional_config_args.append("--enable-maintainer-zts")

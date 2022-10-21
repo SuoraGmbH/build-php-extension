@@ -1,3 +1,6 @@
+ARG COMPOSER_TAG_NAME=latest
+FROM composer:${COMPOSER_TAG_NAME} AS composer
+
 FROM alpine:latest
 
 RUN apk add --no-cache \
@@ -20,7 +23,7 @@ RUN apk add --no-cache \
 
 ENV PS1="\\w \\$ "
 
-COPY --from=composer:latest /usr/bin/composer /usr/local/bin/composer
+COPY --from=composer /usr/bin/composer /usr/local/bin/composer
 
 COPY scripts/ /usr/local/bin/
 COPY share/buildPhp.sh /opt/

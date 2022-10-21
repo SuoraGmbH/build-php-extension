@@ -22,7 +22,8 @@ RUN apt-get update &&  \
         wget \
         zlib1g-dev
 
-COPY --from=composer:latest /usr/bin/composer /usr/local/bin/composer
+ARG COMPOSER_TAG_NAME=latest
+COPY --from=composer:${COMPOSER_TAG_NAME} /usr/bin/composer /usr/local/bin/composer
 
 COPY scripts/ /usr/local/bin/
 COPY share/buildPhp.sh /opt/
