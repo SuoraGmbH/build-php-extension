@@ -47,7 +47,7 @@ build-php-extension --php-version 7.4 --release --zts build
 
 The default is to disable thread safety and to build in debug mode.
 
-Instead of a released version (`--php-version`) you can also specify a git branch or commit like `master`, `PHP-8.2`
+Instead of a released version (`--php-version`) you can also specify a git branch or tag like `master`, `PHP-8.2`
 or `php-8.1.11`:
 
 ```shell
