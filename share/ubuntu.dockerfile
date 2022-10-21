@@ -1,4 +1,7 @@
-FROM ubuntu:latest
+ARG COMPOSER_TAG_NAME=latest
+FROM composer:${COMPOSER_TAG_NAME} AS composer
+
+FROM alpine:latest
 
 RUN apt-get update &&  \
     DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get install -y \
@@ -22,8 +25,7 @@ RUN apt-get update &&  \
         wget \
         zlib1g-dev
 
-ARG COMPOSER_TAG_NAME=latest
-COPY --from=composer:${COMPOSER_TAG_NAME} /usr/bin/composer /usr/local/bin/composer
+COPY --from=composer /usr/bin/composer /usr/local/bin/composer
 
 COPY scripts/ /usr/local/bin/
 COPY share/buildPhp.sh /opt/
