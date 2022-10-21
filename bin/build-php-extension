@@ -27,7 +27,8 @@ class PhpVersionInfo:
 
 def get_php_version_info(args):
     if args.php_git_branch:
-        with urllib.request.urlopen("https://raw.githubusercontent.com/php/php-src/%s/main/php_version.h" % args.php_git_branch) as response:
+        with urllib.request.urlopen(
+                "https://raw.githubusercontent.com/php/php-src/%s/main/php_version.h" % args.php_git_branch) as response:
             for line in response:
                 match = re.search(r"^#define PHP_VERSION_ID (\d+)$", line.decode("utf-8"))
                 if match:
