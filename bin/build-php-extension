@@ -272,7 +272,8 @@ argument_parser.add_argument("--zts", action="store_true", help="Enable PHP thre
 
 php_version = argument_parser.add_mutually_exclusive_group()
 php_version.add_argument("--php-version", default="8.1", help="The PHP minor version")
-php_version.add_argument("--php-git-branch", help="A git tag or branch name from the main PHP repository")
+php_version.add_argument("--php-git-branch",
+                         help="A git tag or branch name from the main PHP repository (e.g. PHP-8.2 or php-8.1.11)")
 
 build_type_group = argument_parser.add_mutually_exclusive_group()
 build_type_group.add_argument("--debug", action="store_true", help="Enable PHP debug mode (default)")
