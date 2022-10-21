@@ -1,7 +1,7 @@
 ARG COMPOSER_TAG_NAME=latest
 FROM composer:${COMPOSER_TAG_NAME} AS composer
 
-FROM alpine:latest
+FROM ubuntu:latest
 
 RUN apt-get update &&  \
     DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get install -y \
