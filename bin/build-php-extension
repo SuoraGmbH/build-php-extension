@@ -147,6 +147,11 @@ def build_image(args):
         # Composer 2.3.0 dropped support for PHP <7.2.5
         flags.append("--build-arg COMPOSER_TAG_NAME=2.2")
 
+    if LooseVersion(version_info.patch_version) < LooseVersion("8.2.0"):
+        # PHP versions before 8.2 don't support OpenSSL version 3, which was added in Alpine 3.17 and Ubuntu 22.04
+        flags.append("--build-arg ALPINE_TAG_NAME=3.16")
+        flags.append("--build-arg UBUNTU_TAG_NAME=20.04")
+
     if args.zts:
         if version_info.patch_version.startswith("7."):
             additional_config_args.append("--enable-maintainer-zts")

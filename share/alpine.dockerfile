@@ -1,7 +1,9 @@
 ARG COMPOSER_TAG_NAME=latest
+ARG ALPINE_TAG_NAME=latest
+
 FROM composer:${COMPOSER_TAG_NAME} AS composer
 
-FROM alpine:latest
+FROM alpine:${ALPINE_TAG_NAME} AS alpine
 
 RUN apk add --no-cache \
     autoconf \

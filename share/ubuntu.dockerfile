@@ -1,7 +1,9 @@
 ARG COMPOSER_TAG_NAME=latest
+ARG UBUNTU_TAG_NAME=latest
+
 FROM composer:${COMPOSER_TAG_NAME} AS composer
 
-FROM ubuntu:latest
+FROM ubuntu:${UBUNTU_TAG_NAME} AS ubuntu
 
 RUN apt-get update &&  \
     DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get install -y \
