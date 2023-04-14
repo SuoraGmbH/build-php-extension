@@ -9,7 +9,6 @@ import subprocess
 import os
 import sys
 import urllib.request
-from distutils.version import LooseVersion
 from enum import Enum
 
 STATE_FILENAME = ".build-php-extension.state.ini"
@@ -19,10 +18,42 @@ BASE_DIRECTORY = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 
 
 class PhpVersionInfo:
-    def __init__(self, minor_version, patch_version, filename):
+    def __init__(self, minor_version, patch_version, version_id, filename):
         self.minor_version = minor_version
         self.patch_version = patch_version
+        self.version_id = version_id
         self.filename = filename
+
+
+def php_version_info_from_id(version_id, filename):
+    patch = version_id % 100
+    minor = int(version_id / 100) % 100
+    major = int(version_id / 10000)
+
+    return PhpVersionInfo(
+        "%s.%s" % (major, minor),
+        "%s.%s.%s" % (major, minor, patch),
+        version_id,
+        filename
+    )
+
+
+def php_version_info_from_versions(minor_version, patch_version, filename):
+    match = re.fullmatch(r"(\d+)\.(\d+)\.(\d+)", patch_version)
+    if not match:
+        raise RuntimeError("Error parsing PHP version number %s" % patch_version)
+
+    major = int(match.group(1))
+    minor = int(match.group(2))
+    patch = int(match.group(3))
+    version_id = major * 10000 + minor * 100 + patch
+
+    return PhpVersionInfo(
+        minor_version,
+        patch_version,
+        version_id,
+        filename
+    )
 
 
 def get_php_version_info(args):
@@ -33,15 +64,7 @@ def get_php_version_info(args):
                 match = re.search(r"^#define PHP_VERSION_ID (\d+)$", line.decode("utf-8"))
                 if match:
                     version_id = int(match.group(1))
-                    patch = version_id % 100
-                    minor = int(version_id / 100) % 100
-                    major = int(version_id / 10000)
-
-                    return PhpVersionInfo(
-                        "%s.%s" % (major, minor),
-                        "%s.%s.%s" % (major, minor, patch),
-                        None
-                    )
+                    return php_version_info_from_id(version_id, None)
         raise RuntimeError("Error parsing PHP version in branch %s" % args.php_git_branch)
 
     minor_version = args.php_version
@@ -56,7 +79,7 @@ def get_php_version_info(args):
             continue
         filename = source["filename"]
         if filename.endswith(".tar.xz"):
-            return PhpVersionInfo(minor_version, patch_version, filename)
+            return php_version_info_from_versions(minor_version, patch_version, filename)
 
     raise RuntimeError("PHP version %s has no .tar.xz source available" % patch_version)
 
@@ -143,11 +166,11 @@ def build_image(args):
     else:
         flags.append("--build-arg PHP_TARBALL_NAME=%s" % shlex.quote(version_info.filename))
 
-    if LooseVersion(version_info.patch_version) < LooseVersion("7.2.5"):
+    if version_info.version_id < 70205:
         # Composer 2.3.0 dropped support for PHP <7.2.5
         flags.append("--build-arg COMPOSER_TAG_NAME=2.2")
 
-    if LooseVersion(version_info.patch_version) < LooseVersion("8.2.0"):
+    if version_info.version_id < 80200:
         # PHP versions before 8.2 don't support OpenSSL version 3, which was added in Alpine 3.17 and Ubuntu 22.04
         flags.append("--build-arg ALPINE_TAG_NAME=3.16")
         flags.append("--build-arg UBUNTU_TAG_NAME=20.04")
@@ -168,18 +191,18 @@ def build_image(args):
     if args.address_sanitizer:
         cflags = ["-fsanitize=address"]
         extension_cflags.extend(cflags)
-        if LooseVersion(version_info.patch_version) >= LooseVersion("8.0"):
+        if version_info.version_id >= 80000:
             additional_config_args.append("--enable-address-sanitizer")
         else:
             php_cflags.extend(cflags)
             php_cflags.append("-DZEND_TRACK_ARENA_ALLOC")
-        if LooseVersion(version_info.patch_version) >= LooseVersion("7.4"):
+        if version_info.version_id >= 70400:
             php_test_args.append("--asan")
 
     if args.undefined_sanitizer:
         cflags = ["-fsanitize=undefined", "-fno-sanitize-recover=undefined", "-fno-sanitize=object-size"]
         extension_cflags.extend(cflags)
-        if LooseVersion(version_info.patch_version) >= LooseVersion("8.1"):
+        if version_info.version_id >= 80100:
             additional_config_args.append("--enable-undefined-sanitizer")
         else:
             php_cflags.extend(cflags)
