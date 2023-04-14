@@ -30,7 +30,8 @@ fi
     --with-mysqli \
     --with-openssl \
     --with-pdo-mysql \
-    --with-pdo-sqlite \
+    --with-pdo-sqlite=/usr \
+    --with-sqlite3=/usr \
     --with-zip \
     --with-zlib \
     --without-pear \
