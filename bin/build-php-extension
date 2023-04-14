@@ -157,6 +157,7 @@ def build_image(args):
     additional_config_args = []
     extension_cflags = []
     php_cflags = []
+    php_ldflags = []
     php_test_args = []
     install_additional_packages = []
 
@@ -191,13 +192,19 @@ def build_image(args):
     if args.address_sanitizer:
         cflags = ["-fsanitize=address"]
         extension_cflags.extend(cflags)
+
         if version_info.version_id >= 80000:
             additional_config_args.append("--enable-address-sanitizer")
         else:
             php_cflags.extend(cflags)
             php_cflags.append("-DZEND_TRACK_ARENA_ALLOC")
+
         if version_info.version_id >= 70400:
             php_test_args.append("--asan")
+
+        if version_info.version_id < 70400:
+            # https://github.com/php/php-src/commit/6165c23475d5020cda3794cb684693a7fab9918d
+            php_ldflags.append("-ldl")
 
     if args.undefined_sanitizer:
         cflags = ["-fsanitize=undefined", "-fno-sanitize-recover=undefined", "-fno-sanitize=object-size"]
@@ -211,6 +218,7 @@ def build_image(args):
         "ADDITIONAL_PHP_CONFIG_ARGS": additional_config_args,
         "EXTENSION_CFLAGS": extension_cflags,
         "PHP_CFLAGS": php_cflags,
+        "PHP_LDFLAGS": php_ldflags,
         "ADDITIONAL_PHP_TEST_ARGS": php_test_args,
         "INSTALL_ADDITIONAL_PACKAGES": install_additional_packages
     }

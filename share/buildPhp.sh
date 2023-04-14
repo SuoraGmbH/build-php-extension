@@ -19,6 +19,7 @@ fi
 ./configure \
     CFLAGS="${CFLAGS-} ${PHP_CFLAGS-}" \
     CXXFLAGS="${CXXFLAGS-} ${PHP_CFLAGS-}" \
+    LDFLAGS="${LDFLAGS-} ${PHP_LDFLAGS-}" \
     --enable-fpm \
     --enable-mbstring \
     --enable-pdo \
