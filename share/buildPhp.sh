@@ -13,7 +13,7 @@ fi
 cd /opt/php-src
 
 if ! [ -x "configure" ]; then
-    ./buildconf
+    ./buildconf --force
 fi
 
 ./configure \
