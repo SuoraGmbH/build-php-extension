@@ -11,6 +11,7 @@ RUN apt-get update &&  \
         bison \
         build-essential \
         gdb \
+        less \
         libbz2-dev \
         libcurl4-openssl-dev \
         libonig-dev \
