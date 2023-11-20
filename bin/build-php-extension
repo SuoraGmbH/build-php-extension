@@ -138,6 +138,9 @@ def run_in_docker_container(args, command, environment=None):
     for key, value in environment.items():
         flags.append("-e %s=%s" % (shlex.quote(key), shlex.quote(value)))
 
+    if args.docker_network:
+        flags.append("--network %s" % shlex.quote(args.docker_network))
+
     print("Executing command %s in docker container %s" % (command, image_name))
     subprocess.check_call(
         "docker run %s %s %s" % (" ".join(flags), shlex.quote(image_name), command),
@@ -309,6 +312,7 @@ def sanitize_arguments(args):
 
 argument_parser = argparse.ArgumentParser(description="Build and test PHP extensions")
 argument_parser.add_argument("--zts", action="store_true", help="Enable PHP thread safety")
+argument_parser.add_argument("--docker-network", help="The name of the docker network to use for the container")
 
 php_version = argument_parser.add_mutually_exclusive_group()
 php_version.add_argument("--php-version", default="8.1", help="The PHP minor version")
