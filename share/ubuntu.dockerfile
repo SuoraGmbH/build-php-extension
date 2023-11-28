@@ -16,6 +16,8 @@ RUN apt-get update &&  \
         libcurl4-openssl-dev \
         libonig-dev \
         libpcre2-dev \
+        libreadline-dev \
+        libsodium-dev \
         libsqlite3-dev \
         libssl-dev \
         libxml2-dev \

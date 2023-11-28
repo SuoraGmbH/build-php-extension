@@ -13,6 +13,7 @@ RUN apk add --no-cache \
     bzip2-dev \
     curl-dev \
     gdb \
+    libsodium-dev \
     libxml2-dev \
     libzip-dev \
     linux-headers \
@@ -20,6 +21,7 @@ RUN apk add --no-cache \
     pcre2-dev \
     pkgconf \
     re2c \
+    readline-dev \
     sqlite-dev \
     valgrind
 

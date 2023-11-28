@@ -24,6 +24,7 @@ fi
     --enable-fpm \
     --enable-mbstring \
     --enable-pdo \
+    --enable-sockets \
     --enable-soap \
     --with-bz2 \
     --with-curl \
@@ -32,6 +33,8 @@ fi
     --with-openssl \
     --with-pdo-mysql \
     --with-pdo-sqlite=/usr \
+    --with-readline=/usr \
+    --with-sodium \
     --with-sqlite3=/usr \
     --with-zip \
     --with-zlib \
