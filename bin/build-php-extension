@@ -101,6 +101,7 @@ def get_image_name(args):
         "build-php-extension:",
         "git-%s" % args.php_git_branch if args.php_git_branch else args.php_version,
         "-%s" % linux_distribution.value,
+        "-%s" % args.platform.replace("/", "_") if args.platform else "",
         "-clang" if args.clang else "",
         "-zts" if args.zts else "",
         "-asan" if args.address_sanitizer else "",
@@ -131,6 +132,9 @@ def run_in_docker_container(args, command, environment=None):
     ]
     if sys.stdin.isatty():
         flags.append("--interactive --tty")
+
+    if args.platform:
+        flags.append("--platform=%s" % shlex.quote(args.platform))
 
     if args.address_sanitizer:
         environment["ZEND_DONT_UNLOAD_MODULES"] = "1"
@@ -163,6 +167,9 @@ def build_image(args):
     php_ldflags = []
     php_test_args = []
     install_additional_packages = []
+
+    if args.platform:
+        flags.append("--platform=%s" % shlex.quote(args.platform))
 
     if args.php_git_branch:
         flags.append("--build-arg PHP_GIT_BRANCH=%s" % shlex.quote(args.php_git_branch))
@@ -312,6 +319,7 @@ def sanitize_arguments(args):
 argument_parser = argparse.ArgumentParser(description="Build and test PHP extensions")
 argument_parser.add_argument("--zts", action="store_true", help="Enable PHP thread safety")
 argument_parser.add_argument("--docker-network", help="The name of the docker network to use for the container")
+argument_parser.add_argument("--platform", help="Set the platform to use (e.g. linux/amd64 or linux/arm64)")
 
 php_version = argument_parser.add_mutually_exclusive_group()
 php_version.add_argument("--php-version", default="8.1", help="The PHP minor version")
