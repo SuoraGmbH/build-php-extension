@@ -11,6 +11,7 @@ RUN apt-get update &&  \
         bison \
         build-essential \
         gdb \
+        git \
         less \
         libbz2-dev \
         libcurl4-openssl-dev \

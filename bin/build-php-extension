@@ -165,7 +165,6 @@ def build_image(args):
     install_additional_packages = []
 
     if args.php_git_branch:
-        install_additional_packages.append("git")
         flags.append("--build-arg PHP_GIT_BRANCH=%s" % shlex.quote(args.php_git_branch))
     else:
         flags.append("--build-arg PHP_TARBALL_NAME=%s" % shlex.quote(version_info.filename))
