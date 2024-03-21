@@ -10,6 +10,7 @@ RUN apt-get update &&  \
         autoconf \
         bison \
         build-essential \
+        cmake \
         gdb \
         git \
         less \

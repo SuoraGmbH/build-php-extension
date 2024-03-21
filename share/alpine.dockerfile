@@ -11,6 +11,7 @@ RUN apk add --no-cache \
     bison \
     build-base \
     bzip2-dev \
+    cmake \
     curl-dev \
     gdb \
     git \
