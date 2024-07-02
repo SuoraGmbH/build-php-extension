@@ -99,7 +99,7 @@ def get_image_name(args):
     linux_distribution = get_linux_distribution(args)
     return "".join([
         "build-php-extension:",
-        "git-%s" % args.php_git_branch if args.php_git_branch else args.php_version,
+        "git-%s" % args.php_git_branch.replace("/", "_") if args.php_git_branch else args.php_version,
         "-%s" % linux_distribution.value,
         "-%s" % args.platform.replace("/", "_") if args.platform else "",
         "-clang" if args.clang else "",
