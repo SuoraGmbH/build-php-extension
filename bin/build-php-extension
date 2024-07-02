@@ -59,13 +59,15 @@ def php_version_info_from_versions(minor_version, patch_version, filename):
 def get_php_version_info(args):
     if args.php_git_branch:
         with urllib.request.urlopen(
-                "https://raw.githubusercontent.com/php/php-src/%s/main/php_version.h" % args.php_git_branch) as response:
+            "https://raw.githubusercontent.com/%s/%s/main/php_version.h" % (
+                args.php_github_repository, args.php_git_branch)) as response:
             for line in response:
                 match = re.search(r"^#define PHP_VERSION_ID (\d+)$", line.decode("utf-8"))
                 if match:
                     version_id = int(match.group(1))
                     return php_version_info_from_id(version_id, None)
-        raise RuntimeError("Error parsing PHP version in branch %s" % args.php_git_branch)
+        raise RuntimeError("Error parsing PHP version in branch %s in repository %s" % (
+            args.php_git_branch, args.php_github_repository))
 
     minor_version = args.php_version
     response = urllib.request.urlopen("https://www.php.net/releases/index.php?json&version=%s" % minor_version)
@@ -95,13 +97,28 @@ def get_linux_distribution(args):
     return LinuxDistribution.ALPINE
 
 
+def escape_image_name_component(str):
+    return str.replace("/", "_")
+
+
+def get_version_image_identifier(args):
+    if not args.php_git_branch:
+        return args.php_version
+
+    branch_name = escape_image_name_component(args.php_git_branch)
+    if args.php_github_repository == "php/php-src":
+        return "git-%s" % branch_name
+
+    return "git-%s-%s" % (escape_image_name_component(args.php_github_repository), branch_name)
+
+
 def get_image_name(args):
     linux_distribution = get_linux_distribution(args)
     return "".join([
         "build-php-extension:",
-        "git-%s" % args.php_git_branch.replace("/", "_") if args.php_git_branch else args.php_version,
+        get_version_image_identifier(args),
         "-%s" % linux_distribution.value,
-        "-%s" % args.platform.replace("/", "_") if args.platform else "",
+        "-%s" % escape_image_name_component(args.platform.replace) if args.platform else "",
         "-clang" if args.clang else "",
         "-zts" if args.zts else "",
         "-asan" if args.address_sanitizer else "",
@@ -173,6 +190,7 @@ def build_image(args):
 
     if args.php_git_branch:
         flags.append("--build-arg PHP_GIT_BRANCH=%s" % shlex.quote(args.php_git_branch))
+        flags.append("--build-arg PHP_GITHUB_REPOSITORY=%s" % shlex.quote(args.php_github_repository))
     else:
         flags.append("--build-arg PHP_TARBALL_NAME=%s" % shlex.quote(version_info.filename))
 
@@ -325,6 +343,8 @@ php_version = argument_parser.add_mutually_exclusive_group()
 php_version.add_argument("--php-version", default="8.1", help="The PHP minor version")
 php_version.add_argument("--php-git-branch",
                          help="A git tag or branch name from the main PHP repository (e.g. PHP-8.2 or php-8.1.11)")
+argument_parser.add_argument("--php-github-repository", default="php/php-src",
+                             help="The GitHub user and repository names (e.g. php/php-src)")
 
 build_type_group = argument_parser.add_mutually_exclusive_group()
 build_type_group.add_argument("--debug", action="store_true", help="Enable PHP debug mode (default)")

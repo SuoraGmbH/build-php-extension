@@ -5,7 +5,7 @@ set -eu
 mkdir -p /opt/php-src
 
 if [ -n "${PHP_GIT_BRANCH-}" ]; then
-    git clone --depth 1 --branch "${PHP_GIT_BRANCH}" https://github.com/php/php-src.git /opt/php-src
+    git clone --depth 1 --branch "${PHP_GIT_BRANCH}" "https://github.com/${PHP_GITHUB_REPOSITORY}.git" /opt/php-src
 else
     wget "https://www.php.net/distributions/${PHP_TARBALL_NAME}" -O - | tar xJC /opt/php-src/ --strip-components 1
 fi
