@@ -15,6 +15,7 @@ RUN apk add --no-cache \
     curl-dev \
     gdb \
     git \
+    gperf \
     libsodium-dev \
     libxml2-dev \
     libzip-dev \

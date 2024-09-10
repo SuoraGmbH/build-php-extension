@@ -13,6 +13,7 @@ RUN apt-get update &&  \
         cmake \
         gdb \
         git \
+        gperf \
         less \
         libbz2-dev \
         libcurl4-openssl-dev \
