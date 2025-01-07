@@ -2,6 +2,7 @@ ARG COMPOSER_TAG_NAME=latest
 ARG UBUNTU_TAG_NAME=latest
 
 FROM composer:${COMPOSER_TAG_NAME} AS composer
+FROM ghcr.io/php/pie:bin AS pie
 
 FROM ubuntu:${UBUNTU_TAG_NAME} AS ubuntu
 
@@ -34,6 +35,7 @@ RUN apt-get update &&  \
         zlib1g-dev
 
 COPY --from=composer /usr/bin/composer /usr/local/bin/composer
+COPY --from=pie /pie /usr/local/bin/pie
 
 COPY scripts/ /usr/local/bin/
 COPY share/buildPhp.sh /opt/

@@ -2,6 +2,7 @@ ARG COMPOSER_TAG_NAME=latest
 ARG ALPINE_TAG_NAME=latest
 
 FROM composer:${COMPOSER_TAG_NAME} AS composer
+FROM ghcr.io/php/pie:bin AS pie
 
 FROM alpine:${ALPINE_TAG_NAME} AS alpine
 
@@ -31,6 +32,7 @@ RUN apk add --no-cache \
 ENV PS1="\\w \\$ "
 
 COPY --from=composer /usr/bin/composer /usr/local/bin/composer
+COPY --from=pie /pie /usr/local/bin/pie
 
 COPY scripts/ /usr/local/bin/
 COPY share/buildPhp.sh /opt/
