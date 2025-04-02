@@ -35,6 +35,7 @@ COPY --from=composer /usr/bin/composer /usr/local/bin/composer
 COPY --from=pie /pie /usr/local/bin/pie
 
 COPY scripts/ /usr/local/bin/
+COPY share/gdbinit /root/.config/gdb/gdbinit
 COPY share/buildPhp.sh /opt/
 
 ARG INSTALL_ADDITIONAL_PACKAGES
