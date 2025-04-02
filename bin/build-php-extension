@@ -340,7 +340,7 @@ argument_parser.add_argument("--docker-network", help="The name of the docker ne
 argument_parser.add_argument("--platform", help="Set the platform to use (e.g. linux/amd64 or linux/arm64)")
 
 php_version = argument_parser.add_mutually_exclusive_group()
-php_version.add_argument("--php-version", default="8.1", help="The PHP minor version")
+php_version.add_argument("--php-version", default="8.4", help="The PHP minor version")
 php_version.add_argument("--php-git-branch",
                          help="A git tag or branch name from the main PHP repository (e.g. PHP-8.2 or php-8.1.11)")
 argument_parser.add_argument("--php-github-repository", default="php/php-src",
