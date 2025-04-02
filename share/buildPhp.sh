@@ -20,6 +20,7 @@ fi
     CFLAGS="${CFLAGS-} ${PHP_CFLAGS-}" \
     CXXFLAGS="${CXXFLAGS-} ${PHP_CFLAGS-}" \
     LDFLAGS="${LDFLAGS-} ${PHP_LDFLAGS-}" \
+    PHP_BUILD_PROVIDER='https://github.com/SuoraGmbH/build-php-extension' \
     --enable-bcmath \
     --enable-fpm \
     --enable-mbstring \
