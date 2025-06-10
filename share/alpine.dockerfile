@@ -31,9 +31,6 @@ RUN apk add --no-cache \
 
 ENV PS1="\\w \\$ "
 
-COPY --from=composer /usr/bin/composer /usr/local/bin/composer
-COPY --from=pie /pie /usr/local/bin/pie
-
 COPY scripts/ /usr/local/bin/
 COPY share/gdbinit /root/.config/gdb/gdbinit
 COPY share/buildPhp.sh /opt/
@@ -53,6 +50,9 @@ ARG CC
 ENV CC="${CC:-cc}"
 
 RUN /opt/buildPhp.sh
+
+COPY --from=composer /usr/bin/composer /usr/local/bin/composer
+COPY --from=pie /pie /usr/local/bin/pie
 
 ARG EXTENSION_CFLAGS
 ARG ADDITIONAL_PHP_TEST_ARGS
