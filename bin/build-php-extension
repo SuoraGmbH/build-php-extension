@@ -203,6 +203,9 @@ def build_image(args):
         flags.append("--build-arg ALPINE_TAG_NAME=3.16")
         flags.append("--build-arg UBUNTU_TAG_NAME=20.04")
 
+    if version_info.version_id >= 70400:
+        additional_config_args.append("--enable-intl")
+
     if args.zts:
         if version_info.patch_version.startswith("7."):
             additional_config_args.append("--enable-maintainer-zts")

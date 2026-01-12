@@ -23,7 +23,6 @@ fi
     PHP_BUILD_PROVIDER='https://github.com/SuoraGmbH/build-php-extension' \
     --enable-bcmath \
     --enable-fpm \
-    --enable-intl \
     --enable-mbstring \
     --enable-pdo \
     --enable-sockets \
