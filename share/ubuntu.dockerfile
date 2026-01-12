@@ -18,6 +18,7 @@ RUN apt-get update &&  \
         less \
         libbz2-dev \
         libcurl4-openssl-dev \
+        libicu-dev \
         libonig-dev \
         libpcre2-dev \
         libreadline-dev \
