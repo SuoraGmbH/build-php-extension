@@ -42,5 +42,5 @@ fi
     --without-pear \
     ${ADDITIONAL_PHP_CONFIG_ARGS-}
 
-make -j$(( $(getconf _NPROCESSORS_ONLN) + 1 ))
+make -j$(($(getconf _NPROCESSORS_ONLN) + 1))
 make install
