@@ -218,6 +218,7 @@ def build_image(args):
     if args.clang:
         install_additional_packages.append("clang")
         flags.append("--build-arg CC=clang")
+        flags.append("--build-arg CXX=clang++")
 
     if args.address_sanitizer:
         cflags = ["-fsanitize=address"]
